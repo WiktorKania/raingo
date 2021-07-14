@@ -8,6 +8,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
+	"github.com/julienschmidt/httprouter"
 )
 
 func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
@@ -15,6 +16,10 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 		return
 	}
 	fmt.Println("Got a message, ", msg.Content)
+}
+
+func createHttpServer() {
+	fmt.Println("hey", httprouter.New())
 }
 
 func main() {
