@@ -19,7 +19,7 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 }
 
 func createHttpServer() {
-	fmt.Println("hey", httprouter.New())
+	fmt.Println("Hey", httprouter.New())
 }
 
 func main() {
