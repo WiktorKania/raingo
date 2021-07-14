@@ -68,7 +68,7 @@ func sendComic(session *discordgo.Session, msg *discordgo.MessageCreate) {
 	}
 
 	imageEmbed := discordgo.MessageEmbedImage{URL: randomComic.ImageURL}
-	messageEmbed := discordgo.MessageEmbed{Image: &imageEmbed}
+	messageEmbed := discordgo.MessageEmbed{Title: randomComic.Title, Image: &imageEmbed}
 
 	session.ChannelMessageSendEmbed(msg.ChannelID, &messageEmbed)
 }
