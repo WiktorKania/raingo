@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
@@ -11,11 +12,27 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+func tellJoke(session *discordgo.Session, msg *discordgo.MessageCreate) {
+	session.ChannelMessageSend(msg.ChannelID, "Przychodzi facet do jasnowidzki.\n- Dzień dobry, Kamilu.\n- Ale ja nie jestem Kamil.\n- Wiem.")
+}
+
 func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID == session.State.User.ID {
 		return
 	}
 	fmt.Println("Got a message, ", msg.Content)
+	message := strings.ToLower(msg.Content)
+
+	if strings.HasPrefix(message, "go ") {
+		command := message[3:]
+		fmt.Println("Got command, ", command)
+		switch command {
+		case "joke":
+			tellJoke(session, msg)
+		case "help":
+			session.ChannelMessageSend(msg.ChannelID, "I'll look for therapy places for you in my free time")
+		}
+	}
 }
 
 func createHttpServer() {
