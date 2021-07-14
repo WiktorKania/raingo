@@ -18,6 +18,59 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+type Meme struct {
+	Title     string
+	NSFW      bool
+	Author    string
+	ImageURLs []string `json:"preview"` // lowest to highest quality
+}
+
+func fetchMeme(memeURL string) (*Meme, error) {
+	res, err := http.Get(memeURL)
+	if err != nil {
+		log.Println("Couldn't reach meme-api: ", err)
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode == 404 {
+		log.Println("Couldn't reach meme-api subreddit: ", memeURL)
+		splittedURL := strings.Split(memeURL, "/")
+		subreddit := splittedURL[len(splittedURL)-1]
+		return nil, fmt.Errorf("There is no subreddit: %s", subreddit)
+	}
+
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Println("Couldn't read meme-api: ", err)
+		return nil, err
+	}
+
+	var meme Meme
+	if err := json.Unmarshal(bodyBytes, &meme); err != nil {
+		log.Println("Couldn't unmarshall meme: ", err)
+		return nil, err
+	}
+
+	return &meme, nil
+}
+
+func sendMeme(subreddit string, session *discordgo.Session, msg *discordgo.MessageCreate) {
+	memeURL := "https://meme-api.herokuapp.com/gimme/" + subreddit
+	meme, err := fetchMeme(memeURL)
+	if err != nil {
+		log.Println("Couldn't fetch meme: ", err)
+		session.ChannelMessageSend(msg.ChannelID, err.Error())
+		return
+	}
+
+	imageEmbed := discordgo.MessageEmbedImage{URL: meme.ImageURLs[len(meme.ImageURLs)-1]}
+	messageEmbed := discordgo.MessageEmbed{Title: meme.Title, Description: "Author: " + meme.Author, Image: &imageEmbed}
+
+	session.ChannelMessageSendEmbed(msg.ChannelID, &messageEmbed)
+}
+
 type Comic struct {
 	Num        int
 	Title      string
@@ -28,21 +81,21 @@ type Comic struct {
 func fetchComic(comicURL string) (*Comic, error) {
 	res, err := http.Get(comicURL)
 	if err != nil {
-		defer log.Println("Couldn't reach xkcd: ", err)
-		res.Body.Close()
+		log.Println("Couldn't reach xkcd: ", err)
 		return nil, err
 	}
+
+	defer res.Body.Close()
+
 	bodyBytes, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		defer log.Println("Couldn't read xkcd: ", err)
-		res.Body.Close()
+		log.Println("Couldn't read xkcd: ", err)
 		return nil, err
 	}
 
 	var comic Comic
 	if err := json.Unmarshal(bodyBytes, &comic); err != nil {
-		defer log.Println("Couldn't unmarshall comic: ", err)
-		res.Body.Close()
+		log.Println("Couldn't unmarshall comic: ", err)
 		return nil, err
 	}
 
@@ -85,15 +138,21 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 	message := strings.ToLower(msg.Content)
 
 	if strings.HasPrefix(message, "go ") {
-		command := message[3:]
+		command := strings.Split(message[3:], " ")
 		fmt.Println("Got command, ", command)
-		switch command {
+		switch command[0] {
 		case "joke":
 			tellJoke(session, msg)
 		case "help":
 			session.ChannelMessageSend(msg.ChannelID, "I'll look for therapy places for you in my free time")
 		case "comic":
 			sendComic(session, msg)
+		case "meme":
+			var subreddit string
+			if len(command) > 1 {
+				subreddit = command[1]
+			}
+			sendMeme(subreddit, session, msg)
 		}
 	}
 }
