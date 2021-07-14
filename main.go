@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,7 +20,11 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 }
 
 func createHttpServer() {
-	fmt.Println("hey", httprouter.New())
+	router := httprouter.New()
+	router.GET("/api/raino", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		fmt.Println("endpoint request")
+		w.Write([]byte("hello"))
+	})
 }
 
 func main() {
