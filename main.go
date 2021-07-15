@@ -158,7 +158,16 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 }
 
 func createHttpServer() {
-	fmt.Println("Hey", httprouter.New())
+	router := httprouter.New()
+	router.GET("/api/raino", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		fmt.Println("endpoint request")
+		w.Write([]byte("hello"))
+	})
+	port, present := os.LookupEnv("BOT_TOKEN")
+	if !present {
+		port = "8080"
+	}
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
 func init() {
@@ -179,8 +188,6 @@ func main() {
 	}
 	bot.AddHandler(handleMessage)
 	bot.Open()
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	<-sc
+	createHttpServer()
 	bot.Close()
 }
