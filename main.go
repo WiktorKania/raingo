@@ -166,11 +166,12 @@ func init() {
 }
 
 func main() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		panic("Error loading .env file!")
+	godotenv.Load(".env")
+	botToken, present := os.LookupEnv("BOT_TOKEN")
+	if !present {
+		panic("No bot token found!")
 	}
-	bot, err := discordgo.New("Bot " + os.Getenv("BOT_TOKEN"))
+	bot, err := discordgo.New("Bot " + botToken)
 	fmt.Println("API version:", discordgo.APIVersion)
 	if err != nil {
 		fmt.Println("Error creating bot session!")
