@@ -157,10 +157,11 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 
 func createHttpServer() {
 	router := httprouter.New()
-	router.GET("/api/raino", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	listenToRaindrops := func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		fmt.Println("endpoint request")
 		w.Write([]byte("hello"))
-	})
+	}
+	router.GET("/api/raino", listenToRaindrops)
 	port, present := os.LookupEnv("PORT")
 	if !present {
 		port = "8080"
