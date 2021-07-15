@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
@@ -25,6 +24,11 @@ func createHttpServer() {
 		fmt.Println("endpoint request")
 		w.Write([]byte("hello"))
 	})
+	port, present := os.LookupEnv("BOT_TOKEN")
+	if !present {
+		port = "8080"
+	}
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
 func main() {
@@ -40,8 +44,6 @@ func main() {
 	}
 	bot.AddHandler(handleMessage)
 	bot.Open()
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	<-sc
+	createHttpServer()
 	bot.Close()
 }
