@@ -161,7 +161,7 @@ func createHttpServer() {
 		fmt.Println("endpoint request")
 		w.Write([]byte("hello"))
 	})
-	port, present := os.LookupEnv("BOT_TOKEN")
+	port, present := os.LookupEnv("PORT")
 	if !present {
 		port = "8080"
 	}
