@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -20,39 +19,11 @@ import (
 var SpartathlonID int = 865167211944345600
 var session *discordgo.Session
 
-type UserMsg struct {
-	Nickname string
-	Msg      string
-	Channel  string
-	ImageURL string `json:",omitempty"`
-}
-
 type Meme struct {
 	Title     string
 	NSFW      bool
 	Author    string
 	ImageURLs []string `json:"preview"` // lowest to highest quality
-}
-
-func listenToRaindrops(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	decoder := json.NewDecoder(r.Body)
-	var userMsg UserMsg
-	err := decoder.Decode(&userMsg)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	fields := []*discordgo.MessageEmbedField{
-		{Name: "Author", Value: userMsg.Nickname, Inline: true},
-		{Name: "Message", Value: userMsg.Msg, Inline: true},
-		{Name: "Channel", Value: userMsg.Channel, Inline: true},
-	}
-	var imageEmbed discordgo.MessageEmbedImage
-	if userMsg.ImageURL != "" {
-		imageEmbed = discordgo.MessageEmbedImage{URL: userMsg.ImageURL}
-	}
-	messageEmbed := discordgo.MessageEmbed{Fields: fields, Image: &imageEmbed}
-	session.ChannelMessageSend(strconv.Itoa(SpartathlonID), "Someone from **Raino** is calling:")
-	session.ChannelMessageSendEmbed(strconv.Itoa(SpartathlonID), &messageEmbed)
 }
 
 func fetchMeme(memeURL string) (*Meme, error) {
