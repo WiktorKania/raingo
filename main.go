@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
@@ -19,6 +21,29 @@ var session *discordgo.Session
 
 func tellJoke(session *discordgo.Session, msg *discordgo.MessageCreate) {
 	session.ChannelMessageSend(msg.ChannelID, "Przychodzi facet do jasnowidzki.\n- Dzień dobry, Kamilu.\n- Ale ja nie jestem Kamil.\n- Wiem.")
+}
+
+func makeItRain(username string, message string, channelID string) {
+	channel, err := session.Channel(channelID)
+	if err != nil {
+		log.Println("Couldn't find channel")
+		session.ChannelMessageSend(channelID, "I can't, I don't know where we are.")
+		return
+	}
+	values := map[string]string{"Nickname": username, "Msg": message, "Channel": channel.Name}
+	json, err := json.Marshal(values)
+
+	if err != nil {
+		log.Println(err)
+		session.ChannelMessageSend(channelID, "I can't, I can't write it down.")
+	}
+	r, err := http.Post("http://localhost:8080/api/raino", "application/json", bytes.NewBuffer(json))
+	if err != nil {
+		log.Println(err)
+		session.ChannelMessageSend(channelID, "I tried, I couldn't find them.")
+	}
+	session.ChannelMessageSend(channelID, "I tossed the message!")
+	fmt.Println(r)
 }
 
 func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
@@ -44,6 +69,15 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 				subreddit = command[1]
 			}
 			sendMeme(subreddit, session, msg)
+		case "hermes":
+			var message string
+			if len(command) > 1 {
+				message = strings.Join(command[1:], " ")
+			} else {
+				session.ChannelMessageSend(msg.ChannelID, "What do you want me to say?")
+				return
+			}
+			makeItRain(msg.Author.Username, message, msg.ChannelID)
 		}
 	}
 }
