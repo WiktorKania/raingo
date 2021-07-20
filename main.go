@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,11 +17,42 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+var SpartathlonID int = 865167211944345600
+var session *discordgo.Session
+
+type UserMsg struct {
+	Nickname string
+	Msg      string
+	Channel  string
+	ImageURL string `json:",omitempty"`
+}
+
 type Meme struct {
 	Title     string
 	NSFW      bool
 	Author    string
 	ImageURLs []string `json:"preview"` // lowest to highest quality
+}
+
+func listenToRaindrops(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	decoder := json.NewDecoder(r.Body)
+	var userMsg UserMsg
+	err := decoder.Decode(&userMsg)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fields := []*discordgo.MessageEmbedField{
+		{Name: "Author", Value: userMsg.Nickname, Inline: true},
+		{Name: "Message", Value: userMsg.Msg, Inline: true},
+		{Name: "Channel", Value: userMsg.Channel, Inline: true},
+	}
+	var imageEmbed discordgo.MessageEmbedImage
+	if userMsg.ImageURL != "" {
+		imageEmbed = discordgo.MessageEmbedImage{URL: userMsg.ImageURL}
+	}
+	messageEmbed := discordgo.MessageEmbed{Fields: fields, Image: &imageEmbed}
+	session.ChannelMessageSend(strconv.Itoa(SpartathlonID), "Someone from **Raino** is calling:")
+	session.ChannelMessageSendEmbed(strconv.Itoa(SpartathlonID), &messageEmbed)
 }
 
 func fetchMeme(memeURL string) (*Meme, error) {
@@ -36,7 +68,7 @@ func fetchMeme(memeURL string) (*Meme, error) {
 		log.Println("Couldn't reach meme-api subreddit: ", memeURL)
 		splittedURL := strings.Split(memeURL, "/")
 		subreddit := splittedURL[len(splittedURL)-1]
-		return nil, fmt.Errorf("There is no subreddit: %s", subreddit)
+		return nil, fmt.Errorf("there is no subreddit: %s", subreddit)
 	}
 
 	bodyBytes, err := ioutil.ReadAll(res.Body)
@@ -157,11 +189,11 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 
 func createHttpServer() {
 	router := httprouter.New()
-	listenToRaindrops := func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		fmt.Println("endpoint request")
-		w.Write([]byte("hello"))
-	}
-	router.GET("/api/raino", listenToRaindrops)
+	router.POST("/api/raino", listenToRaindrops)
+	router.GET("/api/raino", func(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		fmt.Println("get request")
+		rw.Write([]byte("Hello"))
+	})
 	port, present := os.LookupEnv("PORT")
 	if !present {
 		port = "8080"
@@ -187,6 +219,7 @@ func main() {
 	}
 	bot.AddHandler(handleMessage)
 	bot.Open()
+	session = bot
 	createHttpServer()
 	bot.Close()
 }
