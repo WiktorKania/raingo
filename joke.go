@@ -36,15 +36,6 @@ func validJokeCategory(jokeType string) bool {
 	return exists
 }
 
-type JokeFlags struct {
-	Nsfw      bool
-	Religious bool
-	Political bool
-	Racist    bool
-	Sexist    bool
-	Explicit  bool
-}
-
 type JokeResponse struct {
 	Error    bool
 	Type     string
