@@ -9,17 +9,17 @@ import (
 )
 
 const (
-	anyJokeUrl = "https://v2.jokeapi.dev/joke/"
+	jokeApiUrl = "https://v2.jokeapi.dev/joke/"
 )
 
 var (
 	allowedJokeCategories = [...]string{
-		"Any", "Programming", "Misc", "Dark", "Pun", "Spooky", "Christmas",
+		"Any", "Programming", "Miscellaneous", "Dark", "Pun", "Spooky", "Christmas",
 	}
 	jokeCategoriesMap = map[string]string{
 		"code":   "Programming",
 		"any":    "Any",
-		"misc":   "Misc",
+		"misc":   "Miscellaneous",
 		"dark":   "Dark",
 		"pun":    "Pun",
 		"spooky": "Spooky",
@@ -67,7 +67,7 @@ func fetchJoke(jokeType string) (string, error) {
 	if ok {
 		jokeType = category
 	}
-	res, err := http.Get(anyJokeUrl + jokeType)
+	res, err := http.Get(jokeApiUrl + jokeType)
 	if err != nil {
 		log.Println("Couldn't reach joke: ", err)
 		return "", err
