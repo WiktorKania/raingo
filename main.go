@@ -47,7 +47,7 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 				joke, err := fetchJoke(jokeType)
 				if err != nil {
 					replyToChannel(msg.ChannelID, "Joke failed")
-					fmt.Println(err)
+					log.Println(err)
 					return
 				}
 				tellJoke(session, msg, joke)

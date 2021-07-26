@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -48,15 +47,10 @@ type JokeFlags struct {
 
 type JokeResponse struct {
 	Error    bool
-	Category string
 	Type     string
 	Setup    string
 	Delivery string
 	Joke     string
-	Flags    JokeFlags
-	Id       int
-	Safe     bool
-	Lang     string
 }
 
 func fetchJoke(jokeType string) (string, error) {
@@ -73,14 +67,9 @@ func fetchJoke(jokeType string) (string, error) {
 		return "", err
 	}
 	defer res.Body.Close()
-	bodyBytes, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Println("Couldn't read joke: ", err)
-		return "", err
-	}
 	var jokeRes JokeResponse
-	if err := json.Unmarshal(bodyBytes, &jokeRes); err != nil {
-		log.Println("Couldn't unmarshall joke: ", err)
+	if err := json.NewDecoder(res.Body).Decode(&jokeRes); err != nil {
+		log.Println("Couldn't decode joke: ", err)
 		return "", err
 	}
 	if jokeRes.Type == "single" {
