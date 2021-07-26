@@ -2,14 +2,40 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
 
 const (
-	anyJokeUrl = "https://v2.jokeapi.dev/joke/Any"
+	anyJokeUrl = "https://v2.jokeapi.dev/joke/"
 )
+
+var (
+	allowedJokeCategories = [...]string{
+		"Any", "Programming", "Misc", "Dark", "Pun", "Spooky", "Christmas",
+	}
+	jokeCategoriesMap = map[string]string{
+		"code":   "Programming",
+		"any":    "Any",
+		"misc":   "Misc",
+		"dark":   "Dark",
+		"pun":    "Pun",
+		"spooky": "Spooky",
+		"xmas":   "Christmas",
+	}
+)
+
+func validJokeCategory(jokeType string) bool {
+	for _, _type := range allowedJokeCategories {
+		if jokeType == _type {
+			return true
+		}
+	}
+	_, exists := jokeCategoriesMap[jokeType]
+	return exists
+}
 
 type JokeFlags struct {
 	Nsfw      bool
@@ -33,8 +59,15 @@ type JokeResponse struct {
 	Lang     string
 }
 
-func fetchJoke() (string, error) {
-	res, err := http.Get(anyJokeUrl)
+func fetchJoke(jokeType string) (string, error) {
+	if !validJokeCategory(jokeType) {
+		return "", errors.New("incorrect joke category")
+	}
+	category, ok := jokeCategoriesMap[jokeType]
+	if ok {
+		jokeType = category
+	}
+	res, err := http.Get(anyJokeUrl + jokeType)
 	if err != nil {
 		log.Println("Couldn't reach joke: ", err)
 		return "", err

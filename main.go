@@ -43,17 +43,24 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 		fmt.Println("Got command, ", command)
 		switch command[0] {
 		case "joke":
-			if len(command) == 2 && command[1] == "boomer" {
-				tellJoke(session, msg, boomerJoke)
+			fetchAndRespond := func(jokeType string) {
+				joke, err := fetchJoke(jokeType)
+				if err != nil {
+					replyToChannel(msg.ChannelID, "Joke failed")
+					fmt.Println(err)
+					return
+				}
+				tellJoke(session, msg, joke)
+			}
+			if len(command) == 2 {
+				if command[1] == "boomer" {
+					tellJoke(session, msg, boomerJoke)
+				} else {
+					fetchAndRespond(command[1])
+				}
 				break
 			}
-			joke, err := fetchJoke()
-			if err != nil {
-				replyToChannel(msg.ChannelID, "Joke failed")
-				fmt.Println(err)
-				break
-			}
-			tellJoke(session, msg, joke)
+			fetchAndRespond("Any")
 		case "help":
 			session.ChannelMessageSend(msg.ChannelID, "I'll look for therapy places for you in my free time")
 		case "comic":
