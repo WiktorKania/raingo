@@ -17,8 +17,12 @@ import (
 var SpartathlonID int = 865167211944345600
 var session *discordgo.Session
 
-func tellJoke(session *discordgo.Session, msg *discordgo.MessageCreate) {
-	session.ChannelMessageSend(msg.ChannelID, "Przychodzi facet do jasnowidzki.\n- Dzień dobry, Kamilu.\n- Ale ja nie jestem Kamil.\n- Wiem.")
+const (
+	boomerJoke = "Przychodzi facet do jasnowidzki.\n- Dzień dobry, Kamilu.\n- Ale ja nie jestem Kamil.\n- Wiem."
+)
+
+func tellJoke(session *discordgo.Session, msg *discordgo.MessageCreate, joke string) {
+	session.ChannelMessageSend(msg.ChannelID, joke)
 }
 
 func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
@@ -33,7 +37,17 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 		fmt.Println("Got command, ", command)
 		switch command[0] {
 		case "joke":
-			tellJoke(session, msg)
+			if len(command) == 0 {
+				tellJoke(session, msg, boomerJoke)
+				break
+			}
+			joke, err := fetchJoke()
+			if err != nil {
+				tellJoke(session, msg, "Joke failed")
+				fmt.Println(err)
+				break
+			}
+			tellJoke(session, msg, joke)
 		case "help":
 			session.ChannelMessageSend(msg.ChannelID, "I'll look for therapy places for you in my free time")
 		case "comic":
