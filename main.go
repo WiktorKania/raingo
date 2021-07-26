@@ -14,11 +14,21 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-var SpartathlonID int = 865167211944345600
-var session *discordgo.Session
+var (
+	SpartathlonID int = 865167211944345600
+	session       *discordgo.Session
+)
 
-func tellJoke(session *discordgo.Session, msg *discordgo.MessageCreate) {
-	session.ChannelMessageSend(msg.ChannelID, "Przychodzi facet do jasnowidzki.\n- Dzień dobry, Kamilu.\n- Ale ja nie jestem Kamil.\n- Wiem.")
+const (
+	boomerJoke = "Przychodzi facet do jasnowidzki.\n- Dzień dobry, Kamilu.\n- Ale ja nie jestem Kamil.\n- Wiem."
+)
+
+func tellJoke(session *discordgo.Session, msg *discordgo.MessageCreate, joke string) {
+	session.ChannelMessageSend(msg.ChannelID, joke)
+}
+
+func replyToChannel(channelID string, msg string) {
+	session.ChannelMessageSend(channelID, msg)
 }
 
 func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
@@ -33,7 +43,24 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 		fmt.Println("Got command, ", command)
 		switch command[0] {
 		case "joke":
-			tellJoke(session, msg)
+			fetchAndRespond := func(jokeType string) {
+				joke, err := fetchJoke(jokeType)
+				if err != nil {
+					replyToChannel(msg.ChannelID, "Joke failed")
+					log.Println(err)
+					return
+				}
+				tellJoke(session, msg, joke)
+			}
+			if len(command) == 2 {
+				if command[1] == "boomer" {
+					tellJoke(session, msg, boomerJoke)
+				} else {
+					fetchAndRespond(command[1])
+				}
+				break
+			}
+			fetchAndRespond("Any")
 		case "help":
 			session.ChannelMessageSend(msg.ChannelID, "I'll look for therapy places for you in my free time")
 		case "comic":

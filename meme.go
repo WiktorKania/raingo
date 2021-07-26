@@ -54,7 +54,7 @@ func sendMeme(subreddit string, session *discordgo.Session, msg *discordgo.Messa
 	meme, err := fetchMeme(memeURL)
 	if err != nil {
 		log.Println("Couldn't fetch meme: ", err)
-		session.ChannelMessageSend(msg.ChannelID, err.Error())
+		replyToChannel(msg.ChannelID, err.Error())
 		return
 	}
 
