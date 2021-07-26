@@ -25,6 +25,10 @@ func tellJoke(session *discordgo.Session, msg *discordgo.MessageCreate, joke str
 	session.ChannelMessageSend(msg.ChannelID, joke)
 }
 
+func replyToChannel(channelID string, msg string) {
+	session.ChannelMessageSend(channelID, msg)
+}
+
 func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID == session.State.User.ID {
 		return
@@ -37,13 +41,13 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 		fmt.Println("Got command, ", command)
 		switch command[0] {
 		case "joke":
-			if len(command) == 0 {
+			if len(command) == 2 && command[1] == "boomer" {
 				tellJoke(session, msg, boomerJoke)
 				break
 			}
 			joke, err := fetchJoke()
 			if err != nil {
-				tellJoke(session, msg, "Joke failed")
+				replyToChannel(msg.ChannelID, "Joke failed")
 				fmt.Println(err)
 				break
 			}
