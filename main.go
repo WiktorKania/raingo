@@ -14,8 +14,10 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-var SpartathlonID int = 865167211944345600
-var session *discordgo.Session
+var (
+	SpartathlonID int = 865167211944345600
+	session       *discordgo.Session
+)
 
 const (
 	boomerJoke = "Przychodzi facet do jasnowidzki.\n- Dzień dobry, Kamilu.\n- Ale ja nie jestem Kamil.\n- Wiem."
