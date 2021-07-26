@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -16,113 +14,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type Meme struct {
-	Title     string
-	NSFW      bool
-	Author    string
-	ImageURLs []string `json:"preview"` // lowest to highest quality
-}
-
-func fetchMeme(memeURL string) (*Meme, error) {
-	res, err := http.Get(memeURL)
-	if err != nil {
-		log.Println("Couldn't reach meme-api: ", err)
-		return nil, err
-	}
-
-	defer res.Body.Close()
-
-	if res.StatusCode == 404 {
-		log.Println("Couldn't reach meme-api subreddit: ", memeURL)
-		splittedURL := strings.Split(memeURL, "/")
-		subreddit := splittedURL[len(splittedURL)-1]
-		return nil, fmt.Errorf("There is no subreddit: %s", subreddit)
-	}
-
-	bodyBytes, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Println("Couldn't read meme-api: ", err)
-		return nil, err
-	}
-
-	var meme Meme
-	if err := json.Unmarshal(bodyBytes, &meme); err != nil {
-		log.Println("Couldn't unmarshall meme: ", err)
-		return nil, err
-	}
-
-	return &meme, nil
-}
-
-func sendMeme(subreddit string, session *discordgo.Session, msg *discordgo.MessageCreate) {
-	memeURL := "https://meme-api.herokuapp.com/gimme/" + subreddit
-	meme, err := fetchMeme(memeURL)
-	if err != nil {
-		log.Println("Couldn't fetch meme: ", err)
-		session.ChannelMessageSend(msg.ChannelID, err.Error())
-		return
-	}
-
-	imageEmbed := discordgo.MessageEmbedImage{URL: meme.ImageURLs[len(meme.ImageURLs)-1]}
-	messageEmbed := discordgo.MessageEmbed{Title: meme.Title, Description: "Author: " + meme.Author, Image: &imageEmbed}
-
-	session.ChannelMessageSendEmbed(msg.ChannelID, &messageEmbed)
-}
-
-type Comic struct {
-	Num        int
-	Title      string
-	Transcript string
-	ImageURL   string `json:"img"`
-}
-
-func fetchComic(comicURL string) (*Comic, error) {
-	res, err := http.Get(comicURL)
-	if err != nil {
-		log.Println("Couldn't reach xkcd: ", err)
-		return nil, err
-	}
-
-	defer res.Body.Close()
-
-	bodyBytes, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Println("Couldn't read xkcd: ", err)
-		return nil, err
-	}
-
-	var comic Comic
-	if err := json.Unmarshal(bodyBytes, &comic); err != nil {
-		log.Println("Couldn't unmarshall comic: ", err)
-		return nil, err
-	}
-
-	return &comic, nil
-}
-
-func sendComic(session *discordgo.Session, msg *discordgo.MessageCreate) {
-	baseURL := "https://xkcd.com"
-	suffixURL := "info.0.json"
-	newestURL := fmt.Sprintf("%s/%s", baseURL, suffixURL)
-	newestComic, err := fetchComic(newestURL)
-	if err != nil {
-		log.Println("Couldn't fetch comic: ", err)
-	}
-	maxNum := newestComic.Num
-
-	randomNum := rand.Intn(maxNum) + 1
-	randomURL := fmt.Sprintf("%s/%d/%s", baseURL, randomNum, suffixURL)
-
-	randomComic, err := fetchComic(randomURL)
-	if err != nil {
-		log.Println("Couldn't fetch comic: ", err)
-	}
-
-	imageEmbed := discordgo.MessageEmbedImage{URL: randomComic.ImageURL}
-	messageEmbed := discordgo.MessageEmbed{Title: randomComic.Title, Image: &imageEmbed}
-
-	session.ChannelMessageSendEmbed(msg.ChannelID, &messageEmbed)
-}
+var SpartathlonID int = 865167211944345600
+var session *discordgo.Session
 
 func tellJoke(session *discordgo.Session, msg *discordgo.MessageCreate) {
 	session.ChannelMessageSend(msg.ChannelID, "Przychodzi facet do jasnowidzki.\n- Dzień dobry, Kamilu.\n- Ale ja nie jestem Kamil.\n- Wiem.")
@@ -157,11 +50,11 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 
 func createHttpServer() {
 	router := httprouter.New()
-	listenToRaindrops := func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		fmt.Println("endpoint request")
-		w.Write([]byte("hello"))
-	}
-	router.GET("/api/raino", listenToRaindrops)
+	router.POST("/api/raino", listenToRaindrops)
+	router.GET("/api/raino", func(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		fmt.Println("get request")
+		rw.Write([]byte("Hello"))
+	})
 	port, present := os.LookupEnv("PORT")
 	if !present {
 		port = "8080"
@@ -187,6 +80,7 @@ func main() {
 	}
 	bot.AddHandler(handleMessage)
 	bot.Open()
+	session = bot
 	createHttpServer()
 	bot.Close()
 }
