@@ -38,23 +38,11 @@ func replyToChannel(channelID string, msg string) {
 	session.ChannelMessageSend(channelID, msg)
 }
 
-func findLatestMessage(guildID string) {
-	channels, err := session.GuildChannels(guildID)
-	if err != nil {
-		log.Println("Couldn't find guilds channels", err)
-	}
-
-	for _, c := range channels {
-		fmt.Println(c.Name, ": ", len(c.Messages), " ", c.LastMessageID, " ", c.Messages)
-	}
-}
-
 func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID == session.State.User.ID {
 		return
 	}
 	fmt.Println("Got a message, ", msg.Content)
-	findLatestMessage(msg.GuildID)
 	message := strings.ToLower(msg.Content)
 
 	if strings.HasPrefix(message, "go ") {
@@ -168,11 +156,11 @@ func createHttpServer() {
 func connectToMongo() *mongo.Client {
 	mongoUser, present := os.LookupEnv("MONGODB_USER")
 	if !present {
-		panic("No bot token found!")
+		panic("No mongouser token found!")
 	}
 	mongoPass, present := os.LookupEnv("MONGODB_PASS")
 	if !present {
-		panic("No bot token found!")
+		panic("No mongopass token found!")
 	}
 	mongoURL := fmt.Sprintf("mongodb+srv://%s:%s@raingo-cache.fuqhm.mongodb.net/raingo-cache?retryWrites=true&w=majority", mongoUser, mongoPass)
 	clientOptions := options.Client().
