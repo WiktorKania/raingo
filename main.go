@@ -102,14 +102,14 @@ func CacheMessage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	err := decoder.Decode(&newMsg)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("decode went wrong", err)
 	}
 	ctx := context.Background()
 	newMsg.Timestamp = time.Now()
 	col := dbClient.Database("raingo-cache").Collection("messageQueue")
 	count, err := col.CountDocuments(ctx, nil, nil)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("count went wrong", err)
 	}
 	if count >= 5 {
 		findOptions := options.Find()
@@ -117,7 +117,7 @@ func CacheMessage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		findOptions.SetLimit(1)
 		cur, err := col.Find(ctx, bson.D{}, findOptions)
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatalln("find went wrong", err)
 		}
 		fmt.Println("going in")
 
@@ -129,12 +129,12 @@ func CacheMessage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 				Timestamp time.Time `json:"timestamp,omitempty"`
 			}{}
 			if err = cur.Decode(&oldMsg); err != nil {
-				log.Fatal(err)
+				log.Fatal("decode oldmsg went wrong", err)
 			}
 			fmt.Println(oldMsg)
 			id, err := primitive.ObjectIDFromHex(oldMsg._id)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal("primitive sth went wrong", err)
 			}
 			deleteResult, _ := col.DeleteOne(context.TODO(), bson.M{"_id": id})
 			if deleteResult.DeletedCount == 0 {
@@ -142,7 +142,7 @@ func CacheMessage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			}
 			res, err := col.InsertOne(ctx, newMsg)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal("inseert went wrong", err)
 			}
 			fmt.Println("res: ", res)
 		}
