@@ -107,38 +107,47 @@ func CacheMessage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	ctx := context.Background()
 	newMsg.Timestamp = time.Now()
 	col := dbClient.Database("raingo-cache").Collection("messageQueue")
-	findOptions := options.Find()
-	findOptions.SetSort(bson.D{primitive.E{Key: "Timestamp", Value: -1}})
-	findOptions.SetLimit(1)
-	cur, err := col.Find(ctx, bson.D{}, findOptions)
+	count, err := col.CountDocuments(ctx, nil, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	for cur.Next(ctx) {
-		oldMsg := struct {
-			_id       string
-			Msg       string    `json:"msg"`
-			User      string    `json:"userName"`
-			Timestamp time.Time `json:"timestamp,omitempty"`
-		}{}
-		if err = cur.Decode(&oldMsg); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(oldMsg)
-		id, err := primitive.ObjectIDFromHex(oldMsg._id)
+	if count >= 5 {
+		findOptions := options.Find()
+		findOptions.SetSort(bson.D{primitive.E{Key: "Timestamp", Value: -1}})
+		findOptions.SetLimit(1)
+		cur, err := col.Find(ctx, bson.D{}, findOptions)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalln(err)
 		}
-		deleteResult, _ := col.DeleteOne(context.TODO(), bson.M{"_id": id})
-		if deleteResult.DeletedCount == 0 {
-			log.Fatal("Error on deleting one Hero", err)
+		fmt.Println("going in")
+
+		for cur.Next(ctx) {
+			oldMsg := struct {
+				_id       string
+				Msg       string    `json:"msg"`
+				User      string    `json:"userName"`
+				Timestamp time.Time `json:"timestamp,omitempty"`
+			}{}
+			if err = cur.Decode(&oldMsg); err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(oldMsg)
+			id, err := primitive.ObjectIDFromHex(oldMsg._id)
+			if err != nil {
+				log.Fatal(err)
+			}
+			deleteResult, _ := col.DeleteOne(context.TODO(), bson.M{"_id": id})
+			if deleteResult.DeletedCount == 0 {
+				log.Fatal("Error on deleting one Hero", err)
+			}
+			res, err := col.InsertOne(ctx, newMsg)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println("res: ", res)
 		}
-		res, err := col.InsertOne(ctx, newMsg)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("res: ", res)
 	}
+	fmt.Println("going out")
 }
 
 func createHttpServer() {
