@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/WiktorKania/raingo/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -18,7 +19,7 @@ type Meme struct {
 	ImageURLs []string `json:"preview"` // lowest to highest quality
 }
 
-func fetchMeme(memeURL string) (*Meme, error) {
+func FetchMeme(memeURL string) (*Meme, error) {
 	res, err := http.Get(memeURL)
 	if err != nil {
 		log.Println("Couldn't reach meme-api: ", err)
@@ -49,12 +50,12 @@ func fetchMeme(memeURL string) (*Meme, error) {
 	return &meme, nil
 }
 
-func sendMeme(subreddit string, session *discordgo.Session, msg *discordgo.MessageCreate) {
+func SendMeme(subreddit string, session *discordgo.Session, msg *discordgo.MessageCreate) {
 	memeURL := "https://meme-api.herokuapp.com/gimme/" + subreddit
-	meme, err := fetchMeme(memeURL)
+	meme, err := FetchMeme(memeURL)
 	if err != nil {
 		log.Println("Couldn't fetch meme: ", err)
-		replyToChannel(msg.ChannelID, err.Error())
+		utils.ReplyToChannel(msg.ChannelID, err.Error())
 		return
 	}
 

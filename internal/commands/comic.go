@@ -42,7 +42,7 @@ func fetchComic(comicURL string) (*Comic, error) {
 	return &comic, nil
 }
 
-func sendComic(session *discordgo.Session, msg *discordgo.MessageCreate) {
+func SendComic(session *discordgo.Session, msg *discordgo.MessageCreate) {
 	baseURL := "https://xkcd.com"
 	suffixURL := "info.0.json"
 	newestURL := fmt.Sprintf("%s/%s", baseURL, suffixURL)

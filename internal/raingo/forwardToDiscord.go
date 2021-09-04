@@ -8,6 +8,8 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/julienschmidt/httprouter"
+
+	"github.com/WiktorKania/raingo/internal/utils"
 )
 
 type UserMsg struct {
@@ -17,7 +19,7 @@ type UserMsg struct {
 	ImageURL string `json:",omitempty"`
 }
 
-func listenToRaindrops(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func ListenToRaindrops(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	decoder := json.NewDecoder(r.Body)
 	var userMsg UserMsg
 	err := decoder.Decode(&userMsg)
@@ -34,6 +36,6 @@ func listenToRaindrops(w http.ResponseWriter, r *http.Request, p httprouter.Para
 		imageEmbed = discordgo.MessageEmbedImage{URL: userMsg.ImageURL}
 	}
 	messageEmbed := discordgo.MessageEmbed{Fields: fields, Image: &imageEmbed}
-	session.ChannelMessageSend(strconv.Itoa(SpartathlonID), "Someone from **Raino** is calling:")
-	session.ChannelMessageSendEmbed(strconv.Itoa(SpartathlonID), &messageEmbed)
+	utils.Session.ChannelMessageSend(strconv.Itoa(utils.SpartathlonID), "Someone from **Raino** is calling:")
+	utils.Session.ChannelMessageSendEmbed(strconv.Itoa(utils.SpartathlonID), &messageEmbed)
 }

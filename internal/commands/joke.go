@@ -44,7 +44,7 @@ type JokeResponse struct {
 	Joke     string
 }
 
-func fetchJoke(jokeType string) (string, error) {
+func FetchJoke(jokeType string) (string, error) {
 	if !validJokeCategory(jokeType) {
 		return "", errors.New("incorrect joke category")
 	}

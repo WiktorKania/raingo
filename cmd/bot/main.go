@@ -13,12 +13,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
 
-	_ "github.com/WiktorKania/raingo/internal/raingo"
-)
-
-var (
-	SpartathlonID int = 865167211944345600
-	session       *discordgo.Session
+	"github.com/WiktorKania/raingo/internal/commands"
+	"github.com/WiktorKania/raingo/internal/raingo"
+	"github.com/WiktorKania/raingo/internal/utils"
 )
 
 const (
@@ -38,17 +35,17 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 		switch command[0] {
 		case "joke":
 			fetchAndRespond := func(jokeType string) {
-				joke, err := commands.fetchJoke(jokeType)
+				joke, err := commands.FetchJoke(jokeType)
 				if err != nil {
-					replyToChannel(msg.ChannelID, "Joke failed")
+					utils.ReplyToChannel(msg.ChannelID, "Joke failed")
 					log.Println(err)
 					return
 				}
-				tellJoke(session, msg, joke)
+				utils.ReplyToChannel(msg.ChannelID, joke)
 			}
 			if len(command) == 2 {
 				if command[1] == "boomer" {
-					tellJoke(session, msg, boomerJoke)
+					utils.ReplyToChannel(msg.ChannelID, boomerJoke)
 				} else {
 					fetchAndRespond(command[1])
 				}
@@ -58,21 +55,21 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 		case "help":
 			session.ChannelMessageSend(msg.ChannelID, "I'll look for therapy places for you in my free time")
 		case "comic":
-			sendComic(session, msg)
+			commands.SendComic(session, msg)
 		case "meme":
 			var subreddit string
 			if len(command) > 1 {
 				subreddit = command[1]
 			}
-			sendMeme(subreddit, session, msg)
+			commands.SendMeme(subreddit, session, msg)
 		}
 	}
 }
 
 func createHttpServer() {
 	router := httprouter.New()
-	router.POST("/api/raino", listenToRaindrops)
-	router.GET("/api/wake", WakeMeUpInside)
+	router.POST("/api/raino", raingo.ListenToRaindrops)
+	router.GET("/api/wake", raingo.WakeMeUpInside)
 	port, present := os.LookupEnv("PORT")
 	if !present {
 		port = "8080"
@@ -98,7 +95,7 @@ func main() {
 	}
 	bot.AddHandler(handleMessage)
 	bot.Open()
-	session = bot
+	utils.Session = bot
 	createHttpServer()
 	bot.Close()
 }

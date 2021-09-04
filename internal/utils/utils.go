@@ -1,11 +1,14 @@
 package utils
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"github.com/bwmarrin/discordgo"
+)
 
-func tellJoke(session *discordgo.Session, msg *discordgo.MessageCreate, joke string) {
-	session.ChannelMessageSend(msg.ChannelID, joke)
-}
+var (
+	SpartathlonID int = 865167211944345600
+	Session       *discordgo.Session
+)
 
-func replyToChannel(channelID string, msg string) {
-	session.ChannelMessageSend(channelID, msg)
+func ReplyToChannel(channelID string, msg string) {
+	Session.ChannelMessageSend(channelID, msg)
 }
