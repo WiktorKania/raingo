@@ -12,6 +12,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
+
+	_ "github.com/WiktorKania/raingo/internal/raingo"
 )
 
 var (
@@ -22,14 +24,6 @@ var (
 const (
 	boomerJoke = "Przychodzi facet do jasnowidzki.\n- Dzień dobry, Kamilu.\n- Ale ja nie jestem Kamil.\n- Wiem."
 )
-
-func tellJoke(session *discordgo.Session, msg *discordgo.MessageCreate, joke string) {
-	session.ChannelMessageSend(msg.ChannelID, joke)
-}
-
-func replyToChannel(channelID string, msg string) {
-	session.ChannelMessageSend(channelID, msg)
-}
 
 func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID == session.State.User.ID {
@@ -44,7 +38,7 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 		switch command[0] {
 		case "joke":
 			fetchAndRespond := func(jokeType string) {
-				joke, err := fetchJoke(jokeType)
+				joke, err := commands.fetchJoke(jokeType)
 				if err != nil {
 					replyToChannel(msg.ChannelID, "Joke failed")
 					log.Println(err)
