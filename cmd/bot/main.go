@@ -62,6 +62,8 @@ func handleMessage(session *discordgo.Session, msg *discordgo.MessageCreate) {
 				subreddit = command[1]
 			}
 			commands.SendMeme(subreddit, session, msg)
+		case "coffee":
+			commands.MakeCoffee(session, msg)
 		}
 	}
 }
